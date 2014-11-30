@@ -1,9 +1,13 @@
-function phi = LSF_update(phi_0, g, MF, lambda,mu, alfa, beta, epsilon, timestep, iter)
+function phi = LSF_update(phi_0, kai_0, g, MF, lambda,mu, alfa, beta, epsilon, timestep, iter)
 
+NB_width=timestep+4;
+[dimx,dimy]=size(g);
 phi=phi_0;
+kai=kai_0;
 [vx, vy]=gradient(g);
 for k=1:iter
     phi=NeumannBoundCond(phi);
+    
     [phi_x,phi_y]=gradient(phi);
     s=sqrt(phi_x.^2 + phi_y.^2);
     smallNumber=1e-10;  
@@ -17,7 +21,22 @@ for k=1:iter
     areaTerm=diracPhi.*g; % balloon/pressure force
     edgeTerm=diracPhi.*(vx.*Nx+vy.*Ny) + diracPhi.*g.*curvature;
     matchingTerm = diracPhi.*MF;
-    phi=phi + timestep*(mu*distRegTerm + lambda*edgeTerm + alfa*areaTerm + beta*matchingTerm);
+    phi_temp= phi + timestep*(mu*distRegTerm + lambda*edgeTerm + alfa*areaTerm + beta*matchingTerm);
+    
+        
+    %%%% extract narrow band points %%%%
+    nb = find(phi<NB_width & phi>-NB_width);
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    num_nb = numel(nb);
+    [nbx,nby]=ind2sub([dimx,dimy],nb);
+    for i=1:1:num_nb
+        tx=nbx(i);ty=nby(i);
+        if(sign(phi(tx,ty)) == sign(phi_temp(tx,ty)))
+            phi(tx,ty)=phi_temp(tx,ty);
+        else
+    end
+    
+    
 end
 
 
@@ -48,3 +67,11 @@ g = f;
 g([1 nrow],[1 ncol]) = g([3 nrow-2],[3 ncol-2]);  
 g([1 nrow],2:end-1) = g([3 nrow-2],2:end-1);          
 g(2:end-1,[1 ncol]) = g(2:end-1,[3 ncol-2]);  
+
+
+function s = sign(x)
+if(x<=0)
+    s=1;
+else
+    s=-1;
+end

@@ -24,7 +24,7 @@ Raw=imread('img2.png');
 
 MF=zeros(dimx,dimy);
 
-phi=MGLS(initial_contour, Raw, MF, 0);
+phi=MGLS(initial_contour, id_map, Raw, MF, 0);
 
 % I1=imread('img2_bw1.png');
 % bw1=(I1>0);

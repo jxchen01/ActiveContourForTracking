@@ -1,4 +1,4 @@
-function phi = MGLS(initial_contour, Raw, MatchingForce,betta)
+function [phi, kai] = MGLS(initial_contour, kai, Raw, MatchingForce,betta)
 
 %%%% parameters %%%%
 sigma=1.5;     % scale parameter in Gaussian kernel
@@ -32,7 +32,7 @@ phi=initialLSF;
 imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
 
 for iter=1:1:MaxIter
-    phi = LSF_update(phi, g, MatchingForce,lambda, mu, alfa, betta, epsilon, timestep, max_iter_inner);
+    phi = LSF_update(phi, kai, g, MatchingForce,lambda, mu, alfa, betta, epsilon, timestep, max_iter_inner);
     figure(10);
     imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); 
     hold on;  
