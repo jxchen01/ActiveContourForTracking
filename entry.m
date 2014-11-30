@@ -1,11 +1,8 @@
+%%%% convention:
+%%%%  phi<0 in Omega, phi>0 outside Omega
+
 %%%%% parameters %%%%%%%%
-timestep=5;  % time step
-mu=0.2/timestep;  % coefficient of the distance regularization term R(phi)
-lambda=0.5; % coefficient of the weighted length term L(phi)
-strong_alpha = 0.75;  % coefficient of the weighted area term A(phi)
-alfa=strong_alpha; 
-epsilon=1; % papramater that specifies the width of the DiracDelta function
-potentialFunction = 'double-well';
+
 
 %%%%%%%%%%%%%%%%% step 1: rough segmentation %%%%%%%%%%%%%%%%%%%%
 %%% perform segmentation at each frame 
