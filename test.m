@@ -13,7 +13,7 @@ for i=1:1:3
     len = length(pList);
     sList = pList(floor(2*len/5):1:ceil(3*len/5));
     tmp=zeros(dimx,dimy);
-    tmp(sList)=i;
+    tmp(sList)=1;
     tmp=imdilate(tmp,se);
     id_map = id_map + tmp.*i;
 end
@@ -24,7 +24,7 @@ Raw=imread('img2.png');
 
 MF=zeros(dimx,dimy);
 
-phi=MGLS(initial_contour, id_map, Raw, MF, 0);
+[phi,kai]=MGLS(initial_contour, id_map, Raw, MF, 0);
 
 % I1=imread('img2_bw1.png');
 % bw1=(I1>0);

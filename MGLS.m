@@ -1,11 +1,11 @@
-function [phi, kai] = MGLS(initial_contour, kai, Raw, MatchingForce,betta)
+function [phi, kai] = MGLS(initial_contour, id_map, Raw, MatchingForce,betta)
 
 %%%% parameters %%%%
 sigma=1.5;     % scale parameter in Gaussian kernel
 G=fspecial('gaussian',9,sigma);
 c0=2;
-MaxIter=400;
-max_iter_inner=5;
+MaxIter=150;
+max_iter_inner=10;
 
 timestep=1;  % time step
 mu=0.2/timestep;  % coefficient of the distance regularization term R(phi)
@@ -29,14 +29,19 @@ initialLSF=c0*ones(dimx,dimy);
 initialLSF(initial_contour>0)=-c0;  
 phi=initialLSF;
 
+kai = id_map;
+
 imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
 
 for iter=1:1:MaxIter
-    phi = LSF_update(phi, kai, g, MatchingForce,lambda, mu, alfa, betta, epsilon, timestep, max_iter_inner);
+    [phi,kai] = LSF_update(phi, kai, g, MatchingForce,lambda, mu, alfa, betta, epsilon, timestep, max_iter_inner);
     figure(10);
     imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); 
     hold on;  
     contour(phi, [0,0], 'r');
     drawnow
+    if(iter>90 && mod(iter,10)==4)
+        keyboard;
+    end
 end
 
