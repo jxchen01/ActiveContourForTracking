@@ -10,7 +10,7 @@ numObj=max(id_map(:));
 
 timestep=1;  % time step
 mu=0.2/timestep;  % coefficient of the distance regularization term R(phi)
-alfa=-1;
+alfa=-5;
 lambda=0.5;
 epsilon=1; % papramater that specifies the width of the DiracDelta function
 %betta=0;
