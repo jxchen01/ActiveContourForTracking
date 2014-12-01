@@ -3,9 +3,10 @@ function [phi, kai] = MGLS(initial_contour, id_map, Raw, MatchingForce,betta)
 %%%% parameters %%%%
 sigma=1.5;     % scale parameter in Gaussian kernel
 G=fspecial('gaussian',9,sigma);
-c0=2;
+c0=3;
 MaxIter=150;
-max_iter_inner=10;
+%max_iter_inner=10;
+numObj=max(id_map(:));
 
 timestep=1;  % time step
 mu=0.2/timestep;  % coefficient of the distance regularization term R(phi)
@@ -13,6 +14,7 @@ alfa=-1;
 lambda=0.5;
 epsilon=1; % papramater that specifies the width of the DiracDelta function
 %betta=0;
+smallNumber = 1e-10;
 
 [dimx,dimy]=size(Raw);
 
@@ -31,17 +33,22 @@ phi=initialLSF;
 
 kai = id_map;
 
-imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
+%imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
 
-for iter=1:1:MaxIter
-    [phi,kai] = LSF_update(phi, kai, g, MatchingForce,lambda, mu, alfa, betta, epsilon, timestep, max_iter_inner);
-    figure(10);
-    imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); 
-    hold on;  
-    contour(phi, [0,0], 'r');
-    drawnow
-    if(iter>90 && mod(iter,10)==4)
-        keyboard;
-    end
-end
+para = struct('Raw',Raw,'iter_max',MaxIter,'mu',mu,'lambda',lambda,...
+    'alfa',alfa,'beta',betta,'epsilon',epsilon,'xdim',dimx,'ydim',dimy,...
+    'numObj',numObj,'smallNumber',smallNumber);
+[phi,kai]=LSF_fast(phi, kai, g, MatchingForce,para);
+
+% for iter=1:1:MaxIter
+%     [phi,kai] = LSF_update(phi, kai, g, MatchingForce,lambda, mu, alfa, betta, epsilon, timestep, max_iter_inner);
+%     figure(10);
+%     imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); 
+%     hold on;  
+%     contour(phi, [0,0], 'r');
+%     drawnow
+%     if(iter>90 && mod(iter,10)==4)
+%         keyboard;
+%     end
+% end
 
