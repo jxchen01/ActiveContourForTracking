@@ -4,7 +4,7 @@ function [phi, kai] = MGLS(initial_contour, id_map, Raw, MatchingForce,betta)
 sigma=1.5;     % scale parameter in Gaussian kernel
 G=fspecial('gaussian',9,sigma);
 c0=3;
-MaxIter=150;
+MaxIter=99;
 %max_iter_inner=10;
 numObj=max(id_map(:));
 

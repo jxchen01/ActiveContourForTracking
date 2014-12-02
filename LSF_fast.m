@@ -22,7 +22,9 @@ drawnow
 
 %%%%% main loop %%%%%
 phi=phi_0;
+stop_flag=false;
 for iter_num=1:1:iter_max
+  
     Fd = computeForce(phi, g, MF, para);
     %%%% cycle one %%%%
     
@@ -40,21 +42,26 @@ for iter_num=1:1:iter_max
     
     %%%%% check stop condition %%%%
     if(stop_check(L_in,L_out,Fd,numObj))
-        break;
+        stop_flag=true;
     end
     
     %%%%% cycle two %%%%%%
-    [phi,kai,L_in,L_out] = regulation(phi,kai,L_in,L_out,numObj);
+    for repeat_num=1:1:2
+        [phi,kai,L_in,L_out] = regulation(phi,kai,L_in,L_out,numObj);
+    end
     
     
     figure(1);
     imagesc(para.Raw,[0, 255]); axis off; axis equal; colormap(gray); 
     hold on;  
     contour(phi, [-1,-1], 'r');
+    title([num2str(iter_num),'  iteration']);
     drawnow
     
    % keyboard
-    
+    if(stop_flag)
+        break;
+    end
 end
 
 end
