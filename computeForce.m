@@ -1,10 +1,10 @@
-function d_F = computeForce(phi, g, MF, para)
+function d_F = computeForce(phi, g, para)
     smallNumber=para.smallNumber;
     epsilon=para.epsilon;
     mu=para.mu;
     lambda=para.lambda;
     alfa=para.alfa;
-    beta=para.beta;
+   % beta=para.beta;
     
     phi=NeumannBoundCond(phi);
     
@@ -15,17 +15,22 @@ function d_F = computeForce(phi, g, MF, para)
   
     Nx=phi_x./(s+smallNumber); % add a small positive number to avoid division by zero
     Ny=phi_y./(s+smallNumber);
-    curvature=div(Nx,Ny);
+    %curvature=div(Nx,Ny);
 
-    distRegTerm=distReg_p2(phi);  % compute the distance regularization term in eqaution (13) with the double-well potential p2.
-      
-    diracPhi=Dirac(phi,epsilon);
-    areaTerm=diracPhi.*g; % balloon/pressure force
-    edgeTerm=diracPhi.*(vx.*Nx+vy.*Ny);
-    %edgeTerm=diracPhi.*(vx.*Nx+vy.*Ny) + diracPhi.*g.*curvature;
-    matchingTerm = diracPhi.*MF;
+    %distRegTerm=distReg_p2(phi);  % compute the distance regularization term in eqaution (13) with the double-well potential p2.
+    
+    areaTerm = g;
+    edgeTerm = (vx.*Nx+vy.*Ny);
+    d_F= lambda*edgeTerm + alfa*areaTerm;
+    
+    d_F= -1*d_F-0.5;
+    
+    %diracPhi=Dirac(phi,epsilon);
+    %areaTerm=diracPhi.*g; % balloon/pressure force
+    %edgeTerm=diracPhi.*(vx.*Nx+vy.*Ny);
+    %%%%edgeTerm=diracPhi.*(vx.*Nx+vy.*Ny) + diracPhi.*g.*curvature;
     %d_F=(lambda*edgeTerm + alfa*areaTerm + beta*matchingTerm);
-    d_F=(mu*distRegTerm + lambda*edgeTerm + alfa*areaTerm + beta*matchingTerm);
+    %d_F=mu*distRegTerm + lambda*edgeTerm + alfa*areaTerm;
 end
 
 function f = distReg_p2(phi)

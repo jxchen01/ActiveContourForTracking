@@ -4,15 +4,15 @@ function [phi, kai] = MGLS(initial_contour, id_map, Raw, MatchingForce,betta)
 sigma=1.5;     % scale parameter in Gaussian kernel
 G=fspecial('gaussian',9,sigma);
 c0=3;
-MaxIter=99;
-%max_iter_inner=10;
+MaxIter=500;
+max_iter_inner=5;
 numObj=max(id_map(:));
 
-timestep=1;  % time step
+timestep=5;  % time step
 mu=0.2/timestep;  % coefficient of the distance regularization term R(phi)
-alfa=-5;
-lambda=0.5;
-epsilon=1; % papramater that specifies the width of the DiracDelta function
+alfa=-1;
+lambda=0.1;
+epsilon=2; % papramater that specifies the width of the DiracDelta function
 %betta=0;
 smallNumber = 1e-10;
 
@@ -20,11 +20,15 @@ smallNumber = 1e-10;
 
 
 %%%% edge indicator (gradient)  %%%%%
-Img_smooth=conv2(Raw,G,'same');  % smooth image by Gaussiin convolution
-[Ix,Iy]=gradient(Img_smooth);
-f=Ix.^2+Iy.^2;
-g=1./(1+f);  % edge indicator function.
+% Img_smooth=conv2(Raw,G,'same');  % smooth image by Gaussiin convolution
+% [Ix,Iy]=gradient(Img_smooth);
+% f=Ix.^2+Iy.^2;
+% g=1./(1+f);  % edge indicator function.
 
+opt_frangi=struct('FrangiScaleRange', [1 3], 'FrangiScaleRatio', 1, 'FrangiBetaOne',...
+    0.5, 'FrangiBetaTwo', 9, 'verbose',false,'BlackWhite',false);
+g=FrangiFilter2D(double(Raw),opt_frangi);
+g=mat2gray(g);
 
 %%%% intial contour %%%%%
 initialLSF=c0*ones(dimx,dimy);

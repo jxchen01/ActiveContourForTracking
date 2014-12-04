@@ -25,17 +25,17 @@ phi=phi_0;
 stop_flag=false;
 for iter_num=1:1:iter_max
   
-    Fd = computeForce(phi, g, MF, para);
+    Fd = computeForce(phi, g, para);
     %%%% cycle one %%%%
     
     %%%%% check L_out  %%%%%%
-    [L_in,L_out,phi,kai]=check_Lout(L_in,L_out,phi,kai,Fd,numObj);
+    [L_in,L_out,phi,kai]=check_Lout(L_in,L_out,phi,kai,Fd,MF,numObj);
     
     %%%%% update L_in %%%%%%%
     [L_in, phi]=update_Lin(L_in,phi,numObj);
     
     %%%%% check L_in %%%%%%
-    [L_in,L_out,phi,kai]=check_Lin(L_in,L_out,phi,kai,Fd,numObj);
+    [L_in,L_out,phi,kai]=check_Lin(L_in,L_out,phi,kai,Fd,MF,numObj);
     
     %%%%% update L_out %%%%%%
     [L_out, phi]=update_Lout(L_out,phi,numObj);
@@ -163,7 +163,7 @@ function Tr=digitTopology(tx,ty,kai, objIdx)
 end
 
 
-function [L_in,L_out,phi,kai]=check_Lin(L_in,L_out,phi,kai,Fd,numObj)
+function [L_in,L_out,phi,kai]=check_Lin(L_in,L_out,phi,kai,Fd,MF,numObj)
     nbr4 = [1,0; -1,0; 0,1; 0,-1];
     for obj=1:1:numObj
         p=L_in{obj}.head; InListTail=L_in{obj}.tail;
@@ -171,7 +171,8 @@ function [L_in,L_out,phi,kai]=check_Lin(L_in,L_out,phi,kai,Fd,numObj)
             p=p.Next;
             nn=p.Data;
             tx=nn(1); ty=nn(2);
-            if(Fd(tx,ty)<0)
+            Fm=sum(MF(tx,ty,:)) - MF(tx,ty,obj);
+            if(Fd(tx,ty)-10*Fm<0)
                 %%% switch out %%%
                 removeNode(p);
                 p.insertBefore(L_out{obj}.tail);
@@ -191,7 +192,7 @@ function [L_in,L_out,phi,kai]=check_Lin(L_in,L_out,phi,kai,Fd,numObj)
     end
 end
 
-function [L_in,L_out,phi,kai]=check_Lout(L_in,L_out,phi,kai,Fd,numObj)
+function [L_in,L_out,phi,kai]=check_Lout(L_in,L_out,phi,kai,Fd,MF,numObj)
     nbr4 = [1,0; -1,0; 0,1; 0,-1];
     for obj=1:1:numObj
         p=L_out{obj}.head; OutListTail=L_out{obj}.tail;
@@ -199,7 +200,8 @@ function [L_in,L_out,phi,kai]=check_Lout(L_in,L_out,phi,kai,Fd,numObj)
             p=p.Next;
             nn=p.Data;
             tx=nn(1); ty=nn(2);
-            if(Fd(tx,ty)>0)
+            Fm=sum(MF(tx,ty,:)) - MF(tx,ty,obj);
+            if(Fd(tx,ty)-10*Fm>0)
                 %%% switch in %%%
                 if(digitTopology(tx,ty,kai,obj)>1)
                     continue;
