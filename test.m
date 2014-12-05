@@ -22,8 +22,8 @@ initial_contour = (id_map>0);
 
 Raw=imread('img2.png');
 
-%MF=zeros(dimx,dimy);
-%[phi,kai]=MGLS(initial_contour, id_map, Raw, MF, 0);
+MF=zeros(dimx,dimy);
+[phi,kai]=MGLS(initial_contour, id_map, Raw, MF, 0);
 
 
 % MF=zeros(dimx,dimy,3);

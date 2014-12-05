@@ -1,6 +1,6 @@
-function [phi,kai_new] = LSF_update(phi_0, kai, g, MF, lambda,mu, alfa, beta, epsilon, timestep, iter)
+function [phi,kai] = LSF_update(phi_0, kai, g, lambda,mu, alfa, epsilon, timestep, iter)
 
-NB_width=timestep+4;
+NB_width=timestep+3;
 [dimx,dimy]=size(g);
 epsilon_merge = 0.1;
 nbr=[1,1; 1,0; 1,-1;0,1;0,-1;-1,1;-1,0;-1,-1];
@@ -22,69 +22,80 @@ for k=1:iter
     diracPhi=Dirac(phi,epsilon);
     areaTerm=diracPhi.*g; % balloon/pressure force
     edgeTerm=diracPhi.*(vx.*Nx+vy.*Ny) + diracPhi.*g.*curvature;
-    matchingTerm = diracPhi.*MF;
-    phi_temp= phi + timestep*(mu*distRegTerm + lambda*edgeTerm + alfa*areaTerm + beta*matchingTerm);
+    phi_temp= phi + timestep*(mu*distRegTerm + lambda*edgeTerm + alfa*areaTerm);
     
         
-    %%%% extract narrow band points %%%%
-    nb = find(phi<NB_width & phi>-NB_width);
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    num_nb = numel(nb);
-    [nbx,nby]=ind2sub([dimx,dimy],nb);
-    for i=1:1:num_nb
-        tx=nbx(i);ty=nby(i);
-        if(phi(tx,ty)>0 && phi_temp(tx,ty)<0)  
-            Tn=[]; T0=0; 
-            for j=1:1:8
-                nx=tx+nbr(j,1);ny=ty+nbr(j,2);
-                if(kai(nx,ny)>0)
-                    Tn=cat(1,Tn,kai(nx,ny));
-                else
-                    T0=T0+1;
+    for bd_iter=1:1:NB_width
+        %%%% extract narrow band points %%%%
+        %nb = find(phi<NB_width & phi>-NB_width);
+        nb = find((phi<bd_iter & phi>=bd_iter-1)| (phi>-bd_iter  & phi<=-bd_iter+1));
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        num_nb = numel(nb);
+        [nbx,nby]=ind2sub([dimx,dimy],nb);
+        for i=1:1:num_nb
+            tx=nbx(i);ty=nby(i);
+            if(phi(tx,ty)>0 && phi_temp(tx,ty)<=0)
+                Tn=[]; T0=0;
+                for j=1:1:8
+                    nx=tx+nbr(j,1);ny=ty+nbr(j,2);
+                    if(kai(nx,ny)>0)
+                        Tn=cat(1,Tn,kai(nx,ny));
+                    else
+                        T0=T0+1;
+                    end
                 end
-            end
-            idx_overlap=unique(Tn);
-            On=numel(idx_overlap);                  
-            if(On>1) %%% relaxed simple point
-                phi(tx,ty)=epsilon_merge;
-            %elseif %%% the other case is nearly impossible
+                idx_overlap=unique(Tn);
+                On=numel(idx_overlap);
+                if(On>1) %%% relaxed simple point
+                    phi(tx,ty)=epsilon_merge;
+                    %elseif %%% the other case is nearly impossible
+                else
+                    phi(tx,ty)=phi_temp(tx,ty);
+                    tmp_id = kai(tx-1:tx+1, ty-1:ty+1);
+                    new_id=unique(nonzeros(tmp_id));
+                    if(numel(new_id)~=1)
+                        disp('error in evolving kai');
+                        keyboard
+                    end
+                    kai(tx,ty)=new_id;
+                end
+            elseif(phi(tx,ty)<=0 && phi_temp(tx,ty)>0)
+                phi(tx,ty)=phi_temp(tx,ty);
+                kai(tx,ty)=0;
             else
                 phi(tx,ty)=phi_temp(tx,ty);
             end
-        elseif(phi(tx,ty)<0 && phi_temp(tx,ty)>0)    
-            phi(tx,ty)=phi_temp(tx,ty);
-        else
-            phi(tx,ty)=phi_temp(tx,ty);
         end
+        
     end
     
-    bw = (phi<1e-8);
-    cc = bwconncomp(bw,4);
-    kai_new=zeros(dimx,dimy);
-    for i=1:1:cc.NumObjects
-        idx=cc.PixelIdxList{i};
-        tid=kai(idx);
-        overlapID=unique(nonzeros(tid));
-        numID=numel(overlapID);
-        if(numID==1)
-            kai_new(idx)=overlapID;
-        elseif(numID>1)
-            maxNum=0;
-            for j=1:1:numID
-                tmp=nnz(tid==overlapID(j));
-                if(tmp>maxNum)
-                    maxNum=tmp;
-                    maxID=overlapID(j);
-                end
-            end
-            kai_new(idx)=maxID;
-        else
-            disp('error in updating Kai');
-            keyboard;
-        end
-    end
-    
-    kai=kai_new;
+%     bw = (phi<1e-8);
+%     cc = bwconncomp(bw,4);
+%     kai_new=zeros(dimx,dimy);
+%     for i=1:1:cc.NumObjects
+%         idx=cc.PixelIdxList{i};
+%         tid=kai(idx);
+%         overlapID=unique(nonzeros(tid));
+%         numID=numel(overlapID);
+%         if(numID==1)
+%             kai_new(idx)=overlapID;
+%         elseif(numID>1)
+%             maxNum=0;
+%             for j=1:1:numID
+%                 tmp=nnz(tid==overlapID(j));
+%                 if(tmp>maxNum)
+%                     maxNum=tmp;
+%                     maxID=overlapID(j);
+%                 end
+%             end
+%             kai_new(idx)=maxID;
+%         else
+%             disp('error in updating Kai');
+%             keyboard;
+%         end
+%     end
+%    
+%     kai=kai_new;
     
 end
 

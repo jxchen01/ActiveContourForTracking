@@ -39,20 +39,22 @@ kai = id_map;
 
 %imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
 
-para = struct('Raw',Raw,'iter_max',MaxIter,'mu',mu,'lambda',lambda,...
-    'alfa',alfa,'beta',betta,'epsilon',epsilon,'xdim',dimx,'ydim',dimy,...
-    'numObj',numObj,'smallNumber',smallNumber);
-[phi,kai]=LSF_fast(phi, kai, g, MatchingForce,para);
+%%%% non-PDE version: With Matching Term %%%%
+% para = struct('Raw',Raw,'iter_max',MaxIter,'mu',mu,'lambda',lambda,...
+%     'alfa',alfa,'beta',betta,'epsilon',epsilon,'xdim',dimx,'ydim',dimy,...
+%     'numObj',numObj,'smallNumber',smallNumber);
+% [phi,kai]=LSF_fast(phi, kai, g, MatchingForce,para);
 
-% for iter=1:1:MaxIter
-%     [phi,kai] = LSF_update(phi, kai, g, MatchingForce,lambda, mu, alfa, betta, epsilon, timestep, max_iter_inner);
-%     figure(10);
-%     imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); 
-%     hold on;  
-%     contour(phi, [0,0], 'r');
-%     drawnow
-%     if(iter>90 && mod(iter,10)==4)
-%         keyboard;
-%     end
-% end
+%%%% PDE Version: Only Topology-Preserving, No Matching %%%%
+for iter=1:1:MaxIter
+    [phi,kai] = LSF_update(phi, kai, g,lambda, mu, alfa, epsilon, timestep, max_iter_inner);
+    figure(1);
+    imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); 
+    hold on;  
+    contour(phi, [0,0], 'r');
+    drawnow
+    if(iter>90 && mod(iter,10)==4)
+        keyboard;
+    end
+end
 
