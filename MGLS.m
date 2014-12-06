@@ -1,4 +1,4 @@
-function [phi, kai] = MGLS(initial_contour, id_map, Raw, MatchingForce,betta)
+function [phi, kai] = MGLS(initial_contour, id_map, Raw, MatchingForce,sz,betta)
 
 %%%% parameters %%%%
 sigma=1.5;     % scale parameter in Gaussian kernel
@@ -37,8 +37,8 @@ phi=initialLSF;
 
 kai = id_map;
 
-figure(1)
-imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
+%figure(1)
+%imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
 
 %%%% non-PDE version: With Matching Term %%%%
 % para = struct('Raw',Raw,'iter_max',MaxIter,'mu',mu,'lambda',lambda,...
@@ -61,5 +61,5 @@ imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(p
 %     end
 % end
 
-[kai,phi,~] = creaseg_chanvese(Raw,initial_contour,kai,MaxIter,0.2,0,1);
+[kai,phi,~] = creaseg_chanvese(Raw,initial_contour,kai,sz,MaxIter,0.2,0,1);
 

@@ -1,3 +1,5 @@
+function [seg,phi,its] = creaseg_chanvese(I,init_mask,kai,sz,max_its,alpha,thresh,display)
+
 % Region Based Active Contour Segmentation
 %
 % seg = region_seg(I,init_mask,max_its,alpha,display)
@@ -17,10 +19,6 @@
 % m = zeros(size(img));
 % m(33:33+117,44:44+128) = 1;
 % seg = region_seg(img,m,500);
-
-
-function [seg,phi,its] = creaseg_chanvese(I,init_mask,kai,max_its,alpha,thresh,display)
- 
 
     %-- default value for parameter alpha is .1
     if(~exist('alpha','var')) 
@@ -46,10 +44,12 @@ function [seg,phi,its] = creaseg_chanvese(I,init_mask,kai,max_its,alpha,thresh,d
     prev_mask = init_mask;        c = 0;
     nbr=[1,1;1,0;1,-1;0,1;0,-1;-1,1;-1,0;-1,-1];
     NB_width=1.2; %%%% increment by 0.2
-    increa = 0.1;
+    increa = 0.6;
     epsilon_merge = 0.001;
     [dimx,dimy]=size(kai);
     phi_temp=zeros(dimx,dimy);
+    numObj = uint16(max(kai(:)));
+    se2= strel('disk',2);
       
     while ((its < max_its) && ~stop)
     
@@ -58,8 +58,10 @@ function [seg,phi,its] = creaseg_chanvese(I,init_mask,kai,max_its,alpha,thresh,d
         if ~isempty(idx)
             %-- intermediate output
             if (display>0)
-                if ( mod(its,50)==0 )            
+                if ( mod(its,5)==0 )            
                     showCurveAndPhi(phi,I,color);
+                    title([num2str(its),'  iteration']);
+                    drawnow
                 end
             end
 
@@ -73,14 +75,29 @@ function [seg,phi,its] = creaseg_chanvese(I,init_mask,kai,max_its,alpha,thresh,d
             curvature = get_curvature(phi,idx);  % force from curvature penalty
 
             dphidt = F./max(abs(F)) + alpha*curvature;  % gradient descent to minimize energy
+            if(its==400)
+                keyboard
+            end
+            for obj_iter = 1:1:numObj
+                imgk = (kai==obj_iter);
+                tmp_sz = nnz(imgk);
+                imgk = imdilate(imgk,se2);
+                tmp = find(imgk(idx)>0);
+                if(tmp_sz<sz(obj_iter)*0.95)
+                    dphidt(tmp)=dphidt(tmp)-0.1/(1+exp(10*tmp_sz/sz(obj_iter)-8.5));
+                elseif(tmp_sz>sz(obj_iter)*1.05)
+                    dphidt(tmp)=dphidt(tmp)+0.1/(1+exp(-10*tmp_sz/sz(obj_iter)+11.5));
+                end
+            end
 
             %-- maintain the CFL condition
             dt = .45/(max(abs(dphidt))+eps);
 
             %-- evolve the curve        
+            %phi(idx) = phi(idx) +  dt.*dphidt;
             phi_temp(idx) = dt.*dphidt;
           
-            %%%% extract narrow band points %%%%
+            %%%% extract narrow band points iteratively%%%%
             for bd_iter = increa:increa:NB_width
                 nb = find((phi<bd_iter & phi>=bd_iter-increa) | (phi>-bd_iter  & phi<=-bd_iter+increa));              
                 num_nb = numel(nb);
@@ -148,6 +165,8 @@ function [seg,phi,its] = creaseg_chanvese(I,init_mask,kai,max_its,alpha,thresh,d
 
     %-- final output
     showCurveAndPhi(phi,I,color); 
+    title([num2str(its),'  iteration']);
+    drawnow
 
     %-- make mask from SDF
     seg = phi<=0; %-- Get mask from levelset
@@ -162,7 +181,6 @@ function showCurveAndPhi(phi,I,cl)
     figure(2);
     imagesc(I,[0, 255]); axis off; axis equal; colormap(gray); 
 	hold on; contour(phi,[0 0],cl,'Linewidth',1); hold off;
-    drawnow
 % 	delete(h);
 %     test = isequal(size(c,2),0);
 % 	while (test==false)
