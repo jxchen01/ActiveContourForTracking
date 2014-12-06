@@ -37,7 +37,8 @@ phi=initialLSF;
 
 kai = id_map;
 
-%imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
+figure(1)
+imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
 
 %%%% non-PDE version: With Matching Term %%%%
 % para = struct('Raw',Raw,'iter_max',MaxIter,'mu',mu,'lambda',lambda,...
@@ -45,16 +46,20 @@ kai = id_map;
 %     'numObj',numObj,'smallNumber',smallNumber);
 % [phi,kai]=LSF_fast(phi, kai, g, MatchingForce,para);
 
-%%%% PDE Version: Only Topology-Preserving, No Matching %%%%
-for iter=1:1:MaxIter
-    [phi,kai] = LSF_update(phi, kai, g,lambda, mu, alfa, epsilon, timestep, max_iter_inner);
-    figure(1);
-    imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); 
-    hold on;  
-    contour(phi, [0,0], 'r');
-    drawnow
-    if(iter>90 && mod(iter,10)==4)
-        keyboard;
-    end
-end
+
+
+% %%%%---- PDE Version: Only Topology-Preserving, No Matching ---------%%
+% for iter=1:1:MaxIter
+%     [phi,kai] = LSF_update(phi, kai, g,lambda, mu, alfa, epsilon, timestep, max_iter_inner);
+%     figure(1);
+%     imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); 
+%     hold on;  
+%     contour(phi, [0,0], 'r');
+%     drawnow
+%     if(iter>90 && mod(iter,10)==4)
+%         keyboard;
+%     end
+% end
+
+[kai,phi,~] = creaseg_chanvese(Raw,initial_contour,kai,MaxIter,0.2,0,1);
 
