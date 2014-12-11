@@ -61,5 +61,6 @@ imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(p
 %     end
 % end
 
-[kai,phi,~] = creaseg_chanvese(Raw,initial_contour,kai,sz,MaxIter,0.2,0,1);
+%[kai,phi,~] = creaseg_chanvese(Raw,initial_contour,kai,sz,MaxIter,0.2,0,1);
 
+[kai,phi,~] = multi_chanvese(Raw,initial_contour,kai,sz,MaxIter,0.2,0,1);
