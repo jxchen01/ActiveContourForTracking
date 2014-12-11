@@ -24,8 +24,8 @@ function [seg,phi,its] = multi_chanvese(I,init_mask,kai,sz,max_its,alpha,thresh,
     its = 0;      stop = 0;
     prev_mask = init_mask;        c = 0;
     nbr=[1,1;1,0;1,-1;0,1;0,-1;-1,1;-1,0;-1,-1];
-    NB_width=1.2; %%%% increment by 0.6
-    increa = 0.6;
+    NB_width=1.2; %%%% increment by 0.2
+    increa = 0.2;
     epsilon_merge = 0.001;
     [dimx,dimy]=size(kai);
     phi_temp=zeros(dimx,dimy);
@@ -59,9 +59,9 @@ function [seg,phi,its] = multi_chanvese(I,init_mask,kai,sz,max_its,alpha,thresh,
             curvature = get_curvature(phi,idx);  % force from curvature penalty
 
             %dphidt = F./max(abs(F)) + alpha*curvature;  % gradient descent to minimize energy
-%             if(its==400)
-%                 keyboard
-%             end
+            if(its==20)
+                keyboard
+            end
             dphidt=zeros(1,num_idx);
             %F=zeros(1,num_idx);
             %regularTerm=zeros(1,num_idx);
@@ -74,9 +74,9 @@ function [seg,phi,its] = multi_chanvese(I,init_mask,kai,sz,max_its,alpha,thresh,
                 F=(I(idx(tmp))-u).^2 - (I(idx(tmp))-v).^2;
                 regularTerm=zeros(numel(tmp),1);
                 if(tmp_sz<sz(obj_iter)*0.75)  
-                    regularTerm(:,1)=alpha*curvature(tmp)-0.05/(1+exp(10*tmp_sz/sz(obj_iter)-8.5));
+                    regularTerm(:,1)=alpha*curvature(tmp)-0.1/(1+exp(10*tmp_sz/sz(obj_iter)-8.5));
                 elseif(tmp_sz>sz(obj_iter)*1.25)
-                    regularTerm(:,1)=alpha*curvature(tmp)+0.05/(1+exp(-10*tmp_sz/sz(obj_iter)+11.5));
+                    regularTerm(:,1)=alpha*curvature(tmp)+0.1/(1+exp(-10*tmp_sz/sz(obj_iter)+11.5));
                 end
                 try
                 dphidt(tmp)=F./max(abs(F))+regularTerm;
@@ -103,37 +103,72 @@ function [seg,phi,its] = multi_chanvese(I,init_mask,kai,sz,max_its,alpha,thresh,
                 for i=1:1:num_nb
                     tx=nbx(i);ty=nby(i);
                     if(phi(tx,ty)>0 && phi_temp(tx,ty)<=0)
-                        Tn=[]; T0=0;
-                        for j=1:1:8
-                            nx=tx+nbr(j,1);ny=ty+nbr(j,2);
-                            if(nx<1 || nx>dimx || ny<1 || ny>dimy)
-                                continue;
-                            end
-                            if(kai(nx,ny)>0)
-                                Tn=cat(1,Tn,kai(nx,ny));
-                            else
-                                T0=T0+1;
-                            end
+                        
+                        a=kai(max(tx-1,1):1:min(tx+1,dimx),max(ty-1,1):1:min(ty+1,dimy));
+                        a(2,2)=0;
+                        tmp_obj=unique(nonzeros(a));
+                        On=numel(tmp_obj);
+                        if(On==1)
+                            kai(tx,ty)=tmp_obj;
+                            phi(tx,ty)=phi_temp(tx,ty);
+                            continue;
                         end
-                        idx_overlap=unique(Tn);
-                        On=numel(idx_overlap);
-                        if(On>1) %%% relaxed simple point
+                        
+                        if(On==0)
                             phi(tx,ty)=epsilon_merge;
-                            %elseif %%% the other case is nearly impossible
-                        else 
-                            tmp_id = kai(max([1,tx-1]):min([tx+1,dimx]), max([1,ty-1]):min([ty+1,dimy]));
-                            new_id=unique(nonzeros(tmp_id));
-                            if(numel(new_id)==0)
-                                phi(tx,ty)=epsilon_merge;
-                            elseif(numel(new_id)==1)
-                                kai(tx,ty)=new_id;
-                                phi(tx,ty)=phi_temp(tx,ty);
-                            else
-                                disp('error in evolving kai');
-                                keyboard
-                            end
+                            continue;
+                            %disp('expanding to an isolated point');
+                            %keyboard
                         end
+                        
+                        a(2,2)=1;
+                        b=(a==0);
+                        cc=bwconncomp(b,8);
+                        if(cc.NumObjects~=1)
+                            phi(tx,ty)=epsilon_merge;
+                            continue;
+                        end
+                        
+                        a(2,2)=0;
+                        b=(a>0);
+                        cc=bwconncomp(b,4);
+                        if(cc.NumObjects~=1) %%% not simple
+                            phi(tx,ty)=epsilon_merge;
+                            continue;
+                        end
+
+                        kai(tx,ty)=tmp_obj(1);
+                        phi(tx,ty)=phi_temp(tx,ty);
+                        
+                       
                     elseif(phi(tx,ty)<=0 && phi_temp(tx,ty)>0)
+                        a=kai(max(tx-1,1):1:min(tx+1,dimx),max(ty-1,1):1:min(ty+1,dimy));
+                        a(2,2)=0;
+                        tmp_obj=unique(nonzeros(a));
+    
+                        if(numel(tmp_obj)>1)
+                            disp('unexpected touching');
+                            keyboard;
+                        elseif(numel(tmp_obj)==0)
+                            disp('isolated point');
+                            keyboard
+                        end
+                        
+                        b=(a>0);
+                        cc=bwconncomp(b,4);
+                        if(cc.NumObjects~=1) %%% not simple
+                            phi(tx,ty)=-epsilon_merge;
+                            continue;
+                        end
+                        
+                        a(2,2)=1;
+                        b=(a==0);
+                        cc=bwconncomp(b,8);
+                        if(cc.NumObjects~=1)
+                            phi(tx,ty)=-epsilon_merge;
+                            continue;
+                        end
+                        
                         phi(tx,ty)=phi_temp(tx,ty);
                         kai(tx,ty)=0;
                     else
