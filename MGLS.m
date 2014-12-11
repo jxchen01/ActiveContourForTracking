@@ -37,8 +37,8 @@ phi=initialLSF;
 
 kai = id_map;
 
-%figure(1)
-%imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
+figure(1)
+imagesc(Raw,[0, 255]); axis off; axis equal; colormap(gray); hold on;  contour(phi, [0,0], 'r');
 
 %%%% non-PDE version: With Matching Term %%%%
 % para = struct('Raw',Raw,'iter_max',MaxIter,'mu',mu,'lambda',lambda,...

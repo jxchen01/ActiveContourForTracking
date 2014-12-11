@@ -58,11 +58,14 @@ function [seg,phi,its] = creaseg_chanvese(I,init_mask,kai,sz,max_its,alpha,thres
         if ~isempty(idx)
             %-- intermediate output
             if (display>0)
-                if ( mod(its,5)==0 )            
+                          
                     showCurveAndPhi(phi,I,color);
                     title([num2str(its),'  iteration']);
                     drawnow
-                end
+%                 if ( mod(its,5)==1 )  
+%                     keyboard
+%                 end
+                
             end
 
             %-- find interior and exterior mean
@@ -83,10 +86,10 @@ function [seg,phi,its] = creaseg_chanvese(I,init_mask,kai,sz,max_its,alpha,thres
                 tmp_sz = nnz(imgk);
                 imgk = imdilate(imgk,se2);
                 tmp = find(imgk(idx)>0);
-                if(tmp_sz<sz(obj_iter)*0.95)
-                    dphidt(tmp)=dphidt(tmp)-0.1/(1+exp(10*tmp_sz/sz(obj_iter)-8.5));
-                elseif(tmp_sz>sz(obj_iter)*1.05)
-                    dphidt(tmp)=dphidt(tmp)+0.1/(1+exp(-10*tmp_sz/sz(obj_iter)+11.5));
+                if(tmp_sz<sz(obj_iter)*0.75)
+                    dphidt(tmp)=dphidt(tmp)-0.0/(1+exp(10*tmp_sz/sz(obj_iter)-8.5));
+                elseif(tmp_sz>sz(obj_iter)*1.25)
+                    dphidt(tmp)=dphidt(tmp)+0.0/(1+exp(-10*tmp_sz/sz(obj_iter)+11.5));
                 end
             end
 
